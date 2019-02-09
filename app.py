@@ -17,7 +17,7 @@ pdfmetrics.registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
 UPLOAD_FOLDER = 'UPLOAD_FOLDER/'
 ALLOWED_EXTENSIONS = set(['pdf'])
 pdf_name = 'pdf_temp.pdf'
-pdf_input_path = 'UPLOAD_FOLDER\pdf_temp.pdf'
+pdf_input_path = 'UPLOAD_FOLDER/pdf_temp.pdf'
 pdf_output_path = 'temp.pdf'
 min_dish_count = 5
 
