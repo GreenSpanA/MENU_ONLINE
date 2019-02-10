@@ -230,7 +230,7 @@ def get_diff3(d1, d2):
     return (round(float(d1-d2),3))
 
 
-def collapse_rows(df_tmp, sense=1.02):
+def collapse_rows(df_tmp, sense=0.03):
     df = df_tmp.copy()
     df = df.sort_values(['page_num', 'y1', 'x0'], ascending=[True, False, True])
     df = df.reset_index(drop=True)
@@ -249,19 +249,26 @@ def collapse_rows(df_tmp, sense=1.02):
         # Check on width
         # Width of page = 612
 
-        if (((x0 < 300) and (x0_next < 300)) or ((x0 > 300) and (x0_next > 300))):
+        # if (((x0 < 300) and (x0_next < 300)) or ((x0 > 300) and (x0_next > 300))):
+        if ((x0_next < x1) and (x1_next > x0)):
 
-            if ((abs(y0 - y1_next) < (sense * height)) and (
-                    df.iloc[i - 1]['page_num'] == df.iloc[i]['page_num'])):
+            if (((abs(y1_next - y0) < sense * height) and (abs(y0_next - y1) < sense * height)) and
+                    (df.iloc[i - 1]['page_num'] == df.iloc[i]['page_num'])):
                 df.loc[i - 1, 'flag'] = 0
+
                 df.loc[i, 'name'] = str(df.iloc[i - 1]['name']) + str(df.iloc[i]['name'])
+
+                df.loc[i, 'x0'] = min(df.iloc[i - 1]['x0'], df.iloc[i]['x0'])
+                df.loc[i, 'x1'] = max(df.iloc[i - 1]['x1'], df.iloc[i]['x1'])
+
+                df.loc[i, 'y0'] = min(df.iloc[i - 1]['y0'], df.iloc[i]['y0'])
+                df.loc[i, 'y1'] = max(df.iloc[i - 1]['y1'], df.iloc[i]['y1'])
+
+                # Set new coordinates of box
 
     df = df[df['flag'] == 1]
     df = df.drop(columns=['flag'])
     df = df.reset_index(drop=True)
-
-    # df = df.sort_values(['page_num', 'y1', 'x0'], ascending=[True, False, True])
-    # df = df.reset_index(drop=True)
     return df
 
 def mean_char(a,b):
@@ -276,6 +283,8 @@ def pdf_boundary_boxes(df,
                        path_input,
                        path_output,
                        page_num=0,
+                       show_height=True,
+                       show_number=False,
                        r=0,
                        g=1,
                        b=0.4):
@@ -283,7 +292,6 @@ def pdf_boundary_boxes(df,
     # create a new PDF with Reportlab
     can = canvas.Canvas(packet, pagesize=letter)
     can.setFont('Vera', 6)
-
     can.setStrokeColorRGB(r, g, b)
 
     for i in range(0, len(df)):
@@ -301,8 +309,12 @@ def pdf_boundary_boxes(df,
 
         # text with height
 
-        can.drawString(df.iloc[i]['x1'], df.iloc[i]['y1'],
-                       "(%s)" % (df.iloc[i]['height']))
+        if show_number:
+            can.drawString(df.iloc[i]['x1'], 0.5 * (df.iloc[i]['y1'] + df.iloc[i]['y0']),
+                           "(%s)" % (i))
+        if show_height:
+            can.drawString(df.iloc[i]['x1'], df.iloc[i]['y1'],
+                           "(%s)" % (df.iloc[i]['height']))
 
         # left line
         can.line(df.iloc[i]['x0'], df.iloc[i]['y1'], df.iloc[i]['x0'],

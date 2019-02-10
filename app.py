@@ -1,10 +1,13 @@
 import os
 from flask import Flask, request, redirect, url_for
 from werkzeug.utils import secure_filename
-from pdf_reader import get_name, get_coordinates, get_diff3, round3, pdf_boundary_boxes
+from pdf_reader import get_name, get_coordinates, get_diff3, round3, \
+    pdf_boundary_boxes, mean_char, collapse_rows
 import pdfquery
 import pandas as pd
 from flask import send_from_directory
+
+import urllib.request
 
 from reportlab.pdfbase.ttfonts import TTFont
 from reportlab.pdfbase import pdfmetrics
@@ -16,10 +19,13 @@ pdfmetrics.registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
 
 UPLOAD_FOLDER = 'UPLOAD_FOLDER/'
 ALLOWED_EXTENSIONS = set(['pdf'])
-pdf_name = 'pdf_temp.pdf'
-pdf_input_path = 'UPLOAD_FOLDER/pdf_temp.pdf'
-pdf_output_path = 'temp.pdf'
+df_name = 'pdf_temp.pdf'
+urllib.request.urlretrieve('https://richardi.azurewebsites.net/Home/GetReport/menu.pdf', 'UPLOAD_FOLDER/menu.pdf')
+pdf_input_path = 'UPLOAD_FOLDER/menu.pdf'
+#pdf_input_path = 'UPLOAD_FOLDER/pdf_temp.pdf'
+pdf_output_path = 'temp_dishes_prices.pdf'
 min_dish_count = 5
+pdf_name = 'pdf_temp.pdf'
 
 app = Flask(__name__)
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -37,6 +43,7 @@ def allowed_file(filename):
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
+        #file = 'https://richardi.azurewebsites.net/Home/GetReport/menu.pdf'
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(upload_path, pdf_name))
@@ -64,7 +71,7 @@ def upload_file():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     # Read fie
-    pdf = pdfquery.PDFQuery('UPLOAD_FOLDER/pdf_temp.pdf')
+    pdf = pdfquery.PDFQuery('UPLOAD_FOLDER/menu.pdf')
     pdf.load()
 
     # Save xml tree
@@ -110,11 +117,70 @@ def uploaded_file(filename):
     tmp = heights[heights['count'] >= min_dish_count].index.values
     item_h = round3(max(tmp[tmp < cat_h]))
 
+    # Plot all boxes
     pdf_boundary_boxes(
         df=items, path_input=pdf_input_path, path_output='UPLOAD_FOLDER/temp.pdf', r=50, g=0, b=100)
 
+    ########################      Get categoties ####################################
+
+    cat_list = items[items['height'].between(0.99 * cat_h, 1.01 * cat_h)]
+    cat_char_w = cat_list.apply(lambda row: mean_char(row['width'], row['name']), axis=1).median()
+    cat_char_w_max = cat_list.apply(lambda row: mean_char(row['width'], row['name']), axis=1).max()
+
+    #Collapse  rows with  cat
+    cat_list = collapse_rows(cat_list, sense=1.03)
+    cat_list = cat_list.sort_values(['page_num', 'y1', 'x0'], ascending=[True, False, True])
+
+    filter = cat_list["name"] != ' '
+    cat_list = cat_list[filter]
+    cat_list = cat_list.reset_index(drop=True)
+
+    #Draw categories boxes
+    pdf_boundary_boxes(df=cat_list, path_input=pdf_input_path, show_height=False,
+                       show_number=True, path_output='UPLOAD_FOLDER/temp1.pdf')
+
+
+    #################### Get items ###############################################
+
+    items_list = items[items['height'].between(0.99 * item_h, 1.01 * item_h)]
+    items_list = items_list.reset_index(drop=True)
+    items_list = collapse_rows(items_list)
+
+    # Delete empty items
+    filter = items_list["name"] != ' '
+    items_list = items_list[filter]
+    items_list = items_list.reset_index(drop=True)
+
+    # Get dishes
+    patternDel = "^[0-9 \. \/]+$"
+    filter = items_list['name'].str.contains(patternDel)
+    dishes_list = items_list[~filter]
+    dishes_list = dishes_list.reset_index(drop=True)
+
+    # Dishes to layout
+    pdf_boundary_boxes(
+        df=dishes_list,
+        path_input="UPLOAD_FOLDER/temp1.pdf",
+        path_output="UPLOAD_FOLDER/temp_dishes.pdf",
+        r=0,
+        g=0,
+        b=230)
+
+    # Get prices
+    prices_list = items_list[~items_list.name.isin(dishes_list.name)]
+    prices_list = prices_list.reset_index(drop=True)
+
+    # Prices to layout
+    pdf_boundary_boxes(
+        df=prices_list,
+        path_input="UPLOAD_FOLDER/temp_dishes.pdf",
+        path_output="UPLOAD_FOLDER/temp_dishes_prices.pdf",
+        r=230,
+        g=0,
+        b=0)
+
     #return 'Done'
-    return send_from_directory(upload_path, 'temp.pdf')
+    return send_from_directory(upload_path, 'temp_dishes_prices.pdf')
 
 
 if __name__ == '__main__':
