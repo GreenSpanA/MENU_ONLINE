@@ -1,9 +1,158 @@
-<!doctype html>
-    <title>Upload new File</title>
+<head>
+<style>
+    .file_select_div {
+    margin-top: 100px;
+}
+
+.file_selected_div {
+    margin-top: 50px;
+}
+
+form ol {
+    padding-left: 0;
+}
+
+form li, div > p {
+    /*background: #eee;*/
+    /*display: flex;*/
+    justify-content: space-between;
+    margin-bottom: 10px;
+    list-style-type: none;
+    /*border: 1px solid black;*/
+}
+
+#file_choose {
+    border: 1px solid black;
+}
+
+form img {
+    /*height: 64px;*/
+    order: 1;
+    position: absolute;
+}
+
+form p {
+    line-height: 32px;
+    padding-left: 20px;
+}
+
+form label, form button {
+    background-color: #7F9CCB;
+    padding: 5px 10px;
+    border-radius: 5px;
+    border: 1px ridge black;
+    font-size: 0.8rem;
+    height: auto;
+}
+
+    form label:hover, form button:hover {
+        background-color: #2D5BA3;
+        color: white;
+    }
+
+    form label:active, form button:active {
+        background-color: #0D3F8F;
+        color: white;
+    }
+ </style>
+
+<script src="https://code.jquery.com/jquery-1.9.1.min.js"></script>
+<script  language="javascript" type="text/javascript">
+var input = document.querySelector('input');
+var preview = document.querySelector('.preview');
+
+var output = document.querySelector('.file_selected_div');
+
+input.style.opacity = 0; input.addEventListener('change', updateImageDisplay, once = false); function updateImageDisplay() {
+    while (preview.firstChild) {
+        preview.removeChild(preview.firstChild);
+
+        output.removeChild(output.firstChild);
+    }
+
+    var curFiles = input.files;
+    if (curFiles.length === 0) {
+        var para = document.createElement('p');
+        para.textContent = 'No files currently selected for upload';
+        preview.appendChild(para);
+
+        var par_out = document.createElement('p');
+        par_out.textContent = 'No files currently selected for upload';
+        output.appendChild(par_out);
+
+    } else {
+        var list = document.createElement('ol');
+        preview.appendChild(list);
+
+        var list_out = document.createElement('ol');
+        output.appendChild(list_out);
+
+        i = 0;
+        var listItem = document.createElement('li');
+        var para = document.createElement('p');
+
+
+        para.textContent = 'File name ' + curFiles[i].name + ', file size ' + returnFileSize(curFiles[i].size) + '.';
+
+
+
+       // var image = document.createElement('img');
+       // image.src = "/images/icon_ок.png";
+
+        //listItem.appendChild(image);
+        //list.appendChild(listItem);
+
+        listItem.appendChild(para);
+            }
+
+}
+function myFunction() {
+    document.getElementById("demo").style.display = "inline";
+}
+var fileTypes = [
+    'image/jpeg',
+    'image/jpeg',
+    'image/pdf',
+    'image/png'
+]
+
+function validFileType(file) {
+    for (var i = 0; i < fileTypes.length; i++) {
+        //if (file.type === fileTypes[i]) {
+        //    return true;
+        //}
+        return true;
+    }
+
+    return false;
+} function returnFileSize(number) {
+    if (number < 1024) {
+        return number + 'bytes';
+    } else if (number > 1024 && number < 1048576) {
+        return (number / 1024).toFixed(1) + 'KB';
+    } else if (number > 1048576) {
+        return (number / 1048576).toFixed(1) + 'MB';
+    }
+}
+</script>
+</head>
+<body>
 
     <h1>Upload new File</h1>
     <form action="" method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
-         <input type=submit value=Upload>
+      <div>
+            <label for="image_uploads">Choose menu to upload (PDF ONLY)</label>
+            <input type="file" id="image_uploads" name="file" accept=".pdf">
+        </div>
+        <div class="preview">
+            <p id="file_choose">Processing takes couple of minutes</p>
+        </div>
+        <div>
+            <button onclick="myFunction()" type="submit">Submit</button>
+        </div>
     </form>
+</body>
+
+
+
 

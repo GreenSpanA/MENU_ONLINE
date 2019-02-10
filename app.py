@@ -1,5 +1,5 @@
 import os
-from flask import Flask, request, redirect, url_for
+from flask import Flask, request, redirect, url_for,render_template
 from werkzeug.utils import secure_filename
 from pdf_reader import get_name, get_coordinates, get_diff3, round3, \
     pdf_boundary_boxes, mean_char, collapse_rows
@@ -48,15 +48,8 @@ def upload_file():
             file.save(os.path.join(upload_path, pdf_name))
             return redirect(url_for('uploaded_file',
                                     filename=pdf_output_path))
-    return '''
-    <!doctype html>
-    <title>Upload new File</title>
-    <h1>Upload new File</h1>
-    <form action="" method=post enctype=multipart/form-data>
-      <p><input type=file name=file>
-         <input type=submit value=Upload>
-    </form>
-    '''
+    return render_template("index.html")
+
 
 
 # Open file in uploads
