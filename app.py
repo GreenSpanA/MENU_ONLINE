@@ -20,8 +20,8 @@ pdfmetrics.registerFont(TTFont('VeraBI', 'VeraBI.ttf'))
 UPLOAD_FOLDER = 'UPLOAD_FOLDER/'
 ALLOWED_EXTENSIONS = set(['pdf'])
 df_name = 'pdf_temp.pdf'
-urllib.request.urlretrieve('https://richardi.azurewebsites.net/Home/GetReport/menu.pdf', 'UPLOAD_FOLDER/menu.pdf')
-pdf_input_path = 'UPLOAD_FOLDER/menu.pdf'
+#urllib.request.urlretrieve('https://richardi.azurewebsites.net/Home/GetReport/menu.pdf', 'UPLOAD_FOLDER/menu.pdf')
+#pdf_input_path = 'UPLOAD_FOLDER/menu.pdf'
 #pdf_input_path = 'UPLOAD_FOLDER/pdf_temp.pdf'
 pdf_output_path = 'temp_dishes_prices.pdf'
 min_dish_count = 5
@@ -43,7 +43,6 @@ def allowed_file(filename):
 def upload_file():
     if request.method == 'POST':
         file = request.files['file']
-        #file = 'https://richardi.azurewebsites.net/Home/GetReport/menu.pdf'
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file.save(os.path.join(upload_path, pdf_name))
@@ -59,6 +58,7 @@ def upload_file():
     </form>
     '''
 
+
 # Open file in uploads
 #@app.route('/uploads/<filename>')
 #def uploaded_file(filename):
@@ -71,7 +71,7 @@ def upload_file():
 @app.route('/uploads/<filename>')
 def uploaded_file(filename):
     # Read fie
-    pdf = pdfquery.PDFQuery('UPLOAD_FOLDER/menu.pdf')
+    pdf = pdfquery.PDFQuery('UPLOAD_FOLDER/pdf_temp.pdf')
     pdf.load()
 
     # Save xml tree
@@ -119,7 +119,7 @@ def uploaded_file(filename):
 
     # Plot all boxes
     pdf_boundary_boxes(
-        df=items, path_input=pdf_input_path, path_output='UPLOAD_FOLDER/temp.pdf', r=50, g=0, b=100)
+        df=items, path_input='UPLOAD_FOLDER/pdf_temp.pdf', path_output='UPLOAD_FOLDER/temp.pdf', r=50, g=0, b=100)
 
     ########################      Get categoties ####################################
 
@@ -136,7 +136,7 @@ def uploaded_file(filename):
     cat_list = cat_list.reset_index(drop=True)
 
     #Draw categories boxes
-    pdf_boundary_boxes(df=cat_list, path_input=pdf_input_path, show_height=False,
+    pdf_boundary_boxes(df=cat_list, path_input='UPLOAD_FOLDER/pdf_temp.pdf', show_height=False,
                        show_number=True, path_output='UPLOAD_FOLDER/temp1.pdf')
 
 
