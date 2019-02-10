@@ -155,6 +155,7 @@ def uploaded_file(filename):
         df=dishes_list,
         path_input="UPLOAD_FOLDER/temp1.pdf",
         path_output="UPLOAD_FOLDER/temp_dishes.pdf",
+        show_height=False,
         r=0,
         g=0,
         b=230)
@@ -168,6 +169,7 @@ def uploaded_file(filename):
         df=prices_list,
         path_input="UPLOAD_FOLDER/temp_dishes.pdf",
         path_output="UPLOAD_FOLDER/temp_dishes_prices.pdf",
+        show_height=False,
         r=230,
         g=0,
         b=0)
