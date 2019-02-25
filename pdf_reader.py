@@ -338,3 +338,4 @@ def pdf_boundary_boxes(df,
     output.write(outputStream)
     outputStream.close()
     return
+
